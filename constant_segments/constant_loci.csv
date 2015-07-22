@@ -1,0 +1,27 @@
+species;locus;accession;type;pos_start;pos_end;description
+human;IGHM;BC009851.2;transcript;422;661;Homo sapiens immunoglobulin heavy constant mu, mRNA (cDNA clone IMAGE:4054579)
+human;IGHD;BC021276.2;transcript;479;718;Homo sapiens immunoglobulin heavy constant delta, mRNA (cDNA clone IMAGE:4855067)
+human;IGHG1;BC069020.1;transcript;498;737;Homo sapiens immunoglobulin heavy constant gamma 1 (G1m marker), mRNA (cDNA clone IMAGE:6214622)
+human;IGHG2;BC062335.1;transcript;482;721;Homo sapiens immunoglobulin heavy constant gamma 2 (G2m marker), mRNA (cDNA clone IMAGE:6281452)
+human;IGHG3;BC033178.1;transcript;496;735;Homo sapiens immunoglobulin heavy constant gamma 3 (G3m marker), mRNA (cDNA clone IMAGE:4566267)
+human;IGHG4;BC025985.1;transcript;458;697;Homo sapiens immunoglobulin heavy constant gamma 4 (G4m marker), mRNA (cDNA clone IMAGE:4042623)
+human;IGHA1;BC005951.1;transcript;497;736;Homo sapiens immunoglobulin heavy constant alpha 1, mRNA (cDNA clone IMAGE:4249174)
+human;IGHA2;BC073765.1;transcript;439;678;Homo sapiens immunoglobulin heavy constant alpha 2 (A2m marker), mRNA (cDNA clone IMAGE:4765168)
+human;IGHE;X95746.1;transcript;440;679;H.sapiens immunoglobulin epsilon chain
+human;IGKC;BC110394.1;transcript;426;665;Homo sapiens immunoglobulin kappa constant, mRNA (cDNA clone IMAGE:5215019)
+human;IGLC1;NG_000002.1;genomic;861539;861778;Homo sapiens immunoglobulin lambda locus (IGL) on chromosome 22
+human;IGLC2;NG_000002.1;genomic;867140;867379;Homo sapiens immunoglobulin lambda locus (IGL) on chromosome 22
+human;IGLC3;NG_000002.1;genomic;872496;872735;Homo sapiens immunoglobulin lambda locus (IGL) on chromosome 22
+human;IGLC7;NG_000002.1;genomic;888750;888989;Homo sapiens immunoglobulin lambda locus (IGL) on chromosome 22
+mouse;Ighm;BC098504.1;transcript;462;701;Mus musculus immunoglobulin heavy chain 6 (heavy chain of IgM), mRNA (cDNA clone IMAGE:30078127)
+mouse;Ighd;AK134885.1;transcript;685;924;Mus musculus adult male olfactory brain cDNA, RIKEN full-length enriched library, clone:6430508A06 product:Ig delta chain C region membrane-bound form, full insert sequence
+mouse;Ighg1;AK156019.1;transcript;490;729;Mus musculus activated spleen cDNA, RIKEN full-length enriched library, clone:F830004G20 product:immunoglobulin heavy chain 4 (serum IgG1), full insert sequence
+mouse;Ighg2b;AK134155.1;transcript;690;929;Mus musculus adult male thymus cDNA, RIKEN full-length enriched library, clone:5830460E04 product:Ig gamma-2B chain C region secreted form, full insert sequence
+mouse;Ighg2c;AK007918.1;transcript;471;710;Mus musculus 10 day old male pancreas cDNA, RIKEN full-length enriched library, clone:1810060O09 product:immunoglobulin heavy chain 1 (serum IgG2a), full insert sequence
+mouse;Ighg3;AK037822.1;transcript;387;626;Mus musculus 16 days neonate thymus cDNA, RIKEN full-length enriched library, clone:A130052K22 product:immunoglobulin heavy chain 8 (heavy chain of IgG3), full insert sequence
+mouse;Ighe;X01857.1;transcript;140;379;Mouse gene for IgE heavy chain constant region
+mouse;Igha;AK142609.1;transcript;442;681;Mus musculus 10 days lactation, adult female mammary gland cDNA, RIKEN full-length enriched library, clone:D730010N08 product:Ig alpha chain C region homolog [Mus musculus], full insert sequence
+mouse;Igkc;AK002514.1;transcript;414;653;Mus musculus adult male kidney cDNA, RIKEN full-length enriched library, clone:0610010P20 product:immunoglobulin kappa chain variable 28 (V28), full insert sequence
+mouse;Iglc1;AF138740.1;transcript;106;345;Mus musculus immunoglobulin J-C lambda 1 cluster mRNA sequence
+mouse;Iglc2;AF138741.1;transcript;155;394;Mus musculus immunoglobulin J-C lambda 2 cluster mRNA sequence
+mouse;Iglc3;AF138742.1;transcript;105;344;Mus musculus immunoglobulin J-C lambda 3 cluster mRNA sequence
