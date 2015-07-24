@@ -65,7 +65,8 @@ do
 done;
 
 if [[ -n $TARGET_DIR ]];
-	cp ${OUT_DIR}/*.n* ${TARGET_DIR}/
+then
+	cp -v ${OUT_DIR}/*.n* ${TARGET_DIR}/
 else
 	echo "INFO: No target directory given. Copying of database files will be skipped." 1>&2
 fi;

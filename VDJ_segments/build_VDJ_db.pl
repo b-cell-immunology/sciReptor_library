@@ -17,8 +17,6 @@ optional:
 
 =head1 DESCRIPTION
 
-
-
 =head1 HISTORY
 
 =cut
@@ -45,7 +43,7 @@ my $library_scheme = "";
 my $fasta_dir = "";
 my $species = "";
 # Variables, path fixed for installation
-my $IGDATA_path = "../igdata/";
+my $IGDATA_path = "../igdata";
 my $mysql_group = "";
 my $optional_file_arg = "";
 

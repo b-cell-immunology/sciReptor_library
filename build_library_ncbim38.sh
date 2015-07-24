@@ -33,10 +33,10 @@ echo "[OK] Setting up database for NCBI m38 mouse VDJ."
 cd ../constant_segments/
 
 echo "[OK] Setting up database for mouse constant."
-cp mouse_ncbim38_gl_C.fasta ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C
+mv -v mouse_ncbim38_gl_C.fasta ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C
 makeblastdb -dbtype nucl -in ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C
-mv ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C.fasta
-./build_constant_db.pl -mysql_group mysql_igdb -lib ${LIBRARY} -sp mouse -fasta mouse_ncbim38_gl_C.fasta
+mv -v ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C.fasta
+./build_constant_db.pl -mysql_group mysql_igdb -lib ${LIBRARY} -sp mouse -fasta ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C.fasta
 
 # process tags
 #

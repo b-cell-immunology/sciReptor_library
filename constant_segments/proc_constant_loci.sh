@@ -26,6 +26,8 @@ while read CSVLINE; do
 		touch ${SPECIES}_gl_C.fasta
 	fi;
 	
+	printf "%-12s: " "${SEQNAME}"
+
 	echo ">${SEQNAME}" \
 		>> ${SPECIES}_gl_C.fasta
 	curl -# "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=${SEQID}&rettype=fasta&retmode=text" \
