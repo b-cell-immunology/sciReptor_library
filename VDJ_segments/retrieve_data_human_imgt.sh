@@ -4,6 +4,8 @@ export SPECIES="human"
 export CURR_DATE=$(date --iso-8601)
 export BASE_URL="http://www.imgt.org/genedb"
 
+TARGET_DIR=$1
+
 declare -A HASH_BINOM;
 HASH_BINOM["human"]="Homo+sapiens";
 HASH_BINOM["mouse"]="Mus+musculus";
@@ -14,7 +16,7 @@ then
 	exit 1;
 fi;
 
-OUT_DIR="data_${SOURCE}_${SPECIES}_${CURR_DATE}"
+OUT_DIR="data_${SPECIES}_${SOURCE}_${CURR_DATE}"
 if [[ -d "$OUT_DIR" ]];
 then
 	echo "ERROR: Data directory $OUT_DIR already exists"
@@ -23,7 +25,7 @@ else
 	mkdir "$OUT_DIR"
 fi;
 
-OUT_FILE_SEGINFO="segments_${SOURCE}_${SPECIES}_${CURR_DATE}.tsv"
+OUT_FILE_SEGINFO="segments_${SPECIES}_${SOURCE}_${CURR_DATE}.tsv"
 if [[ -e "$OUT_FILE_SEGINFO" ]];
 then
 	echo "ERROR: Segment information file $OUT_FILE_SEGINFO already exists"
@@ -62,6 +64,8 @@ do
 	 mv $OUT_FILE_FASTA ${OUT_FILE_FASTA}.fasta
 done;
 
-sync
-IGDATA="../igdata/database"
-cp $OUT_DIR/*.n* ${IGDATA}/
+if [[ -n $TARGET_DIR ]];
+	cp ${OUT_DIR}/*.n* ${TARGET_DIR}/
+else
+	echo "INFO: No target directory given. Copying of database files will be skipped." 1>&2
+fi;

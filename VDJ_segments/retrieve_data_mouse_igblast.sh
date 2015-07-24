@@ -1,8 +1,10 @@
 #!/usr/bin/bash
-export SOURCE="ncbi"
+export SOURCE="igblast"
 export SPECIES="mouse"
 export CURR_DATE=$( date --iso-8601 )
 export BASE_URL="ftp://ftp.ncbi.nih.gov/blast/executables/igblast/release/database"
+
+TARGET_DIR=$1
 
 declare -A HASH_BINOM;
 HASH_BINOM["human"]="Homo+sapiens";
@@ -14,7 +16,7 @@ then
 	exit 1;
 fi;
 
-OUT_DIR="data_${SOURCE}_${SPECIES}_${CURR_DATE}"
+OUT_DIR="data_${SPECIES}_${SOURCE}_${CURR_DATE}"
 if [[ -d "$OUT_DIR" ]];
 then
 	echo "ERROR: Data directory $OUT_DIR already exists"
@@ -23,7 +25,7 @@ else
 	mkdir "$OUT_DIR"
 fi;
 
-OUT_FILE_SEGINFO="segments_${SOURCE}_${SPECIES}_${CURR_DATE}.tsv"
+OUT_FILE_SEGINFO="segments_${SPECIES}_${SOURCE}_${CURR_DATE}.tsv"
 if [[ -e "$OUT_FILE_SEGINFO" ]];
 then
 	echo "ERROR: Segment information file $OUT_FILE_SEGINFO already exists"
@@ -45,15 +47,15 @@ then
 	echo "FATAL: This script requires blastdbcmd version 2.2.30+ or above!" 1>&2
 	echo "       Data was downloaded, but neither FASTA files nor segment"
 	echo "       information has been generated! Aborting..."
-	#exit 1;
+	exit 1;
 fi;
 
 for SEGTYPE in V D J;
 do
 	echo "Processing $SEGTYPE segments..."
-	OUT_FILE_FASTA="./data_${SOURCE}_${SPECIES}_${CURR_DATE}/${SPECIES}_gl_${SEGTYPE}.fasta"
+	OUT_FILE_FASTA="./data_${SPECIES}_${SOURCE}_${CURR_DATE}/${SPECIES}_gl_${SEGTYPE}.fasta"
 	touch $OUT_FILE_FASTA
-	blastdbcmd -db ./data_${SOURCE}_${SPECIES}_${CURR_DATE}/${SPECIES}_gl_${SEGTYPE} -entry all -outfmt "%i=%s" \
+	blastdbcmd -db ./data_${SPECIES}_${SOURCE}_${CURR_DATE}/${SPECIES}_gl_${SEGTYPE} -entry all -outfmt "%i=%s" \
 	| while read BLASTDBOUT;
 	do
 		if [[ ${BLASTDBOUT} =~ ([-./*#0-9A-Za-z]+)\=([[:alpha:]]+) ]];
@@ -69,6 +71,8 @@ do
 done;
 echo "WARNING: Only segment type (V, D or J), but NO LOCUS DATA (H, K or L) has been added to the output ($OUT_FILE_SEGINFO)." 1>&2
 
-sync
-IGDATA="../igdata/database"
-cp $OUT_DIR/*.n* ${IGDATA}/
+if [[ -n $TARGET_DIR ]];
+	cp ${OUT_DIR}/*.n* ${TARGET_DIR}/
+else
+	echo "INFO: No target directory given. Copying of database files will be skipped." 1>&2
+fi;

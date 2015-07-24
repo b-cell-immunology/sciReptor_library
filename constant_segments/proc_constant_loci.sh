@@ -37,12 +37,12 @@ while read CSVLINE; do
 	IFS=$BAK_IFS;
 done
 
-if ( command -v makeblastdb > /dev/null 2>&1 );
-then
-	mkdir -p database
-	ls -1 *_gl_C.fasta \
-		| sed "s/\.fasta//" \
-		| xargs -n 1 -I '{}' makeblastdb -dbtype nucl -parse_seqids -in '{}'.fasta -out database/'{}'
-else
-	echo "makeblastdb not available, skipping database build."
-fi;
+# if ( command -v makeblastdb > /dev/null 2>&1 );
+# then
+# 	mkdir -p database
+# 	ls -1 *_gl_C.fasta \
+# 		| sed "s/\.fasta//" \
+# 		| xargs -n 1 -I '{}' makeblastdb -dbtype nucl -parse_seqids -in '{}'.fasta -out database/'{}'
+# else
+# 	echo "makeblastdb not available, skipping database build."
+# fi;

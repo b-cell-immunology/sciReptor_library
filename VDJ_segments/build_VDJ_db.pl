@@ -29,8 +29,6 @@ use strict;
 use warnings;
 use Getopt::Long;
 use Bio::SeqIO;
-#use lib '../pipeline/';
-#use bcelldb_init;
 
 # Set up logging
 my $log_buffer="";
@@ -38,7 +36,6 @@ open(LB,'>',\$log_buffer);
 # prefix for logging, telling where log comes from
 my $log_prefix = "[build_VDJ_db] [LOG] ";
 my $error_prefix = "[build_VDJ_db] [ERR] ";
-
 
 
 my $log_bool = 0;
@@ -51,7 +48,6 @@ my $species = "";
 my $IGDATA_path = "../igdata/";
 my $mysql_group = "";
 my $optional_file_arg = "";
-
 
 
 &GetOptions(
@@ -99,8 +95,8 @@ my @segment_files = (
 	$V_seg_fasta,
 	$D_seg_fasta,
 	$J_seg_fasta,
-	);
-	
+);
+
 
 
 # Get database handle from bcelldb_init.
@@ -159,7 +155,7 @@ for my $fasta_file (@segment_files) {
     if ($parse_bool eq 1) {
       ($seg_name, $ref_assembly, $ref_chromosome, $ref_pos1, $ref_pos2, $ref_ori) = split(/:/, $seq_id, 6);
     }
-    # NCBI formatting
+    # Ensembl formatting (for custom mouse NCBIm38 library)
     elsif ($seq_id =~ m/NCBI/) {
       ($seg_name, my $id_rest) = split(/:/, $seq_id, 2);
     }
@@ -172,7 +168,7 @@ for my $fasta_file (@segment_files) {
     else {
       if ($print_log eq 1) {
 	$print_log = 0;
-	print LB "$log_prefix Fasta identifers in $fasta_file could not be parsed to extract segment name like for standard NCBI or IMGT format. Using fasta identifier as segment name.\n";
+	print LB "$log_prefix Fasta identifers in $fasta_file could not be parsed to extract segment name like for standard IMGT or Ensembl format. Using fasta identifier as segment name.\n";
 	}
       $seg_name = $seq_id;
     }
@@ -185,24 +181,34 @@ for my $fasta_file (@segment_files) {
     # split name in family, gene, allele (different from species to species)
     # human nomenclature example: name = family(-{gene})*allele
     if ($species eq "human") {
-    	if ($seg_name =~ m/-/) {
-	    ($seg_family, my $rest) = split(/-/, $seg_name, 2);
-	    ($seg_gene, $seg_allele) = split(/\*/, $rest);
+		if ($seg_name =~ m/-/) {
+			($seg_family, my $rest) = split(/-/, $seg_name, 2);
+			($seg_gene, $seg_allele) = split(/\*/, $rest);
     	}
     	else { ($seg_family, $seg_allele) = split(/\*/, $seg_name, 2); }
     }
-    # mouse nomenclature example: name = family.gene
-    elsif ($species eq "mouse") {
-	if ($seg_name =~ m/\./) {
-    		($seg_family, $seg_gene) = split(/\./,$seg_name)
+	elsif ($species eq "mouse") {
+		# Standard mouse Igh nomenclature is <family>.<segment number within family>.<segment number within locus>,
+		# numbering is performed proxminal to distal (relative to DJC location)
+		# ATTENTION: VGAM3.8 family uses "-" as separator instead of ".", and thus requires case distinction
+		# ATTENTION: Older mouse segment names only use one "."
+		# ATTENTION: Ancient mouse segment names are basically complete random strings and do neither contain family nor
+		#            positional information
+		#
+		if ($seg_name =~ m/^VGAM3\.8-/) {
+			($seg_family, $seg_gene) = (split(/-/,$seg_name))[0,2]
+		}
+		elsif ($seg_name =~ m/\.\w+\./) {
+			($seg_family, $seg_gene) = (split(/\./,$seg_name))[0,2]
+		}
+		elsif ($seg_name =~ m/\./) {
+			($seg_family, $seg_gene) = split(/\./,$seg_name)
+		}
+		else { 
+			$seg_family = $seg_name; 
+			$seg_gene = $seg_name;
+		}
 	}
-	# other nomanclatures are not implemented in detail
-	# segment family and gene are replaced by the segment name
-	else { 
-		$seg_family = $seg_name; 
-		$seg_gene = $seg_name;
-	}
-    }
 
     if ($parse_bool eq 1) {
       $ins_seq_query->execute($species, $seg_name, $seg_family, $seg_gene, $seg_allele, $seq -> seq, $ref_assembly, $ref_chromosome, $ref_pos1, $ref_pos2, $ref_ori);
@@ -247,7 +253,7 @@ for my $id (@identifiers) {
     push(@minus_lu, $id);
   }
 }
-if (@minus_lu) {print LB "$log_prefix The following segments were in the fasta database but not in the lookup table.\t@minus_lu\n";}
+if (@minus_lu) {print LB "$log_prefix The following segments were in the fasta database but not in the segment type lookup table.\t@minus_lu\n";}
 
 
 # 3. Insert Information from internal file
