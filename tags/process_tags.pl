@@ -1,9 +1,12 @@
 #!/usr/bin/perl
 
-# INSERT TAGS INTO TAG LIBRARY TABLE
-# 48_48 tags from the matrix48_48_tags_csv
+# Process data from various tag files for subsequent insertion into the database
+#
+# USE FOLLOWING COMMAND TO UPLOAD TO DATABASE
+# note: use from command line with --local-infile=1 option, otherwise the load data local... is blocked
+# load data local infile 'tag_library.csv' into table tags_library";
 
-use DBI;
+# 48_48 tags from the matrix48_48_tags_csv
 
 # tag batch:
 # species_isotypes_number
@@ -73,8 +76,3 @@ close(CSV48);
 close(COL240);
 close(ROW240);
 close(DBCSV);
-
-# USE FOLLOWING COMMAND TO UPLOAD TO DATABASE
-# note: use from command line with --local-infile=1 option, otherwise the load data local... is blocked
-# load data local infile 'tag_library.csv' into table tags_library";
-
