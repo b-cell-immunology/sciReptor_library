@@ -2,6 +2,12 @@ export CURR_DATE=$( date --iso-8601 )
 export LIBRARY="library_scireptor"
 export DIR_IGDATA_DB="igdata/database"
 
+if [[ ! -e $HOME/.my.cnf ]]; then
+	echo "Could not find MySQL/MariaDB local config file \"$HOME/.my.cnf\". This file is required for providing"
+	echo "authentication information to the script. Aborting!"
+	exit 1;
+fi
+
 mkdir -p $DIR_IGDATA_DB
 
 # set up library schemes

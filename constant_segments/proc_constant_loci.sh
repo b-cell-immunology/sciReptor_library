@@ -5,6 +5,8 @@ then
 	exit 1;
 fi;
 
+echo "Downloading constant segments..."
+
 cat "$1" | \
 while read CSVLINE; do
 	BAK_IFS=$IFS;

@@ -35,7 +35,6 @@ open(LB,'>',\$log_buffer);
 my $log_prefix = "[build_VDJ_db] [LOG] ";
 my $error_prefix = "[build_VDJ_db] [ERR] ";
 
-
 my $log_bool = 0;
 my $parse_bool = 0;
 my $lookup = "";
@@ -50,14 +49,14 @@ my $optional_file_arg = "";
 
 &GetOptions(
 	"mysql_group=s"	=> \$mysql_group,
-	"lu=s"		=> \$lookup,
-	"sp=s"		=> \$species,
-	"fa_dir=s"	=> \$fasta_dir,
+	"lu=s"			=> \$lookup,
+	"sp=s"			=> \$species,
+	"fa_dir=s"		=> \$fasta_dir,
 	"lib_scheme=s"	=> \$library_scheme,
 	"igdata_path=s"	=> \$IGDATA_path,
-	"log!" 		=> \$log_bool,
-	"parse!"	=> \$parse_bool,
-	"opt_file=s"	=> \$optional_file_arg,
+	"log!" 			=> \$log_bool,
+	"parse!"		=> \$parse_bool,
+	"opt_file=s"	=> \$optional_file_arg
 );
 
 die "No library scheme specified with -lib_scheme argument." unless $library_scheme;
@@ -77,8 +76,7 @@ my $optional_file;
 if ($optional_file_arg) {
   $optional_file = $optional_file_arg;
   print LB "$log_prefix Using command line specified optional file $optional_file\n";
-}
-else {
+} else {
   $optional_file = "$IGDATA_path/optional_file/$species\_gl.aux";
   print LB "$log_prefix Using default optional file $optional_file\n";
 }
@@ -96,10 +94,8 @@ my @segment_files = (
 );
 
 
-
-# Get database handle from bcelldb_init.
-# This does not work if there is no database defined in the config file.
-my $dsn="DBI:mysql:$library_scheme;mysql_read_default_file=~/.my.cnf;mysql_read_default_group=$mysql_group;";
+# Get database handle for database passed in the command line. Requires authentication via ".my.cnf" file.
+my $dsn = "DBI:mysql:$library_scheme;mysql_read_default_file=~/.my.cnf;mysql_read_default_group=$mysql_group;";
 my $dbh = DBI->connect($dsn,undef,undef,{PrintError=>1});
 
 # list of all identifiers that appear in the fasta file
@@ -113,114 +109,109 @@ my %ids_segtype_hash;
 
 
 # 1. Insert Information from fasta file
-
-# Insert segment name, species, sequence.
-# Combination of species and segment name is unique in the database
+#
+# Insert segment name, species, sequence. The combination of species and segment name has to be unique in the database.
+#
+# Switch "--parse" will activative parsing of additional information from FASTA header. These are the following fields:
+# reference assembly (e.g. NCBIm38), chromosome, centromeric boundary [bp], telomeric boundary [bp], orientation 
+#
 my $insert_seg_statement;
-print "$parse_bool";
-if ($parse_bool == 1) {
-  # additionally parse assembly, chromosome, start, stop, orientation
-  $insert_seg_statement = "INSERT IGNORE INTO $library_scheme.VDJ_library (species_id, seg_name, seg_family, seg_gene, seg_allele, seg_sequence, ref_assembly, ref_chromosome, ref_pos1, ref_pos2, ref_ori) values (?,?,?,?,?,?,?,?,?,?,?)";
+if ($parse_bool) {
+	print LB "$log_prefix Switch \"--parse\" is set. Will attempt to parse chromosomal location information from FASTA headers.\n";
+	$insert_seg_statement = "INSERT IGNORE INTO $library_scheme.VDJ_library (species_id, seg_name, seg_family, seg_gene, seg_allele, seg_sequence, ref_assembly, ref_chromosome, ref_pos1, ref_pos2, ref_ori) values (?,?,?,?,?,?,?,?,?,?,?)";
+} else {
+	print LB "$log_prefix Switch \"--parse\" is NOT set. Chromosomal location information will be ignored.\n";
+	$insert_seg_statement = "INSERT IGNORE INTO $library_scheme.VDJ_library (species_id, seg_name, seg_family, seg_gene, seg_allele, seg_sequence) values (?,?,?,?,?,?)";
 }
-else {
-  $insert_seg_statement = "INSERT IGNORE INTO $library_scheme.VDJ_library (species_id, seg_name, seg_family, seg_gene, seg_allele, seg_sequence) values (?,?,?,?,?,?)";
-}
-
 my $ins_seq_query = $dbh->prepare($insert_seg_statement);
 
 # open and read fasta files in the given database files
 
 for my $fasta_file (@segment_files) {
-
-  # variable to remember, whether log was already printed for this file
-  my $print_log = 1;
+	# remember whether log was already printed for this file
+	my $print_log = 1;
   
-  my $fasta_in = Bio::SeqIO->new(-file => "$fasta_file",
-	 -format => 'fasta') or die "$error_prefix could not open fasta file $fasta_file";
+	my $fasta_in = Bio::SeqIO->new(-file => "$fasta_file", -format => 'fasta') or die "$error_prefix could not open fasta file $fasta_file";
 
-  while (my $seq = $fasta_in->next_seq()) {
-    my $seq_id =  $seq->id;
-    my $seg_name = "";
-    my $ref_assembly = "";
-    my $ref_chromosome = "";
-    my $ref_ori = "";
-    my $ref_pos1 = "";
-    my $ref_pos2 = "";
+	while (my $seq = $fasta_in->next_seq()) {
+		my $seq_id =  $seq->id;
+		my $seg_name = "";
+		my $ref_assembly = "";
+		my $ref_chromosome = "";
+		my $ref_ori = "";
+		my $ref_pos1 = "";
+		my $ref_pos2 = "";
     
-    # seg name is parsed differently according, to where the fasta file came from
-    # parse if parse_bool set tu true
-    # format needs to be NAME:ASSEMBLY:CHROMOSOME:POS1:POS2:ORIENTATION
-    if ($parse_bool eq 1) {
-      ($seg_name, $ref_assembly, $ref_chromosome, $ref_pos1, $ref_pos2, $ref_ori) = split(/:/, $seq_id, 6);
-    }
-    # Ensembl formatting (for custom mouse NCBIm38 library)
-    elsif ($seq_id =~ m/NCBI/) {
-      ($seg_name, my $id_rest) = split(/:/, $seq_id, 2);
-    }
-    # IMGT formatting
-    elsif ($seq_id =~ m/\|/) {
-      (my $id_rest1, $seg_name, my $id_rest2) = split(/\|/, $seq_id, 23);
-    }
-    # for the meantime we do not implement parsing other formats
-    # if necessary, insert additional parser here
-    else {
-      if ($print_log eq 1) {
-	$print_log = 0;
-	print LB "$log_prefix Fasta identifers in $fasta_file could not be parsed to extract segment name like for standard IMGT or Ensembl format. Using fasta identifier as segment name.\n";
+		# $seg_name is parsed differently according to information in fasta header. $parse_bool enforces extended Ensembl format if set
+		if ($parse_bool) {
+			# "extended" Ensembl format including chromosomal position information. Order of field is NAME:ASSEMBLY:CHROMOSOME:POS1:POS2:ORIENTATION
+			# This is used by the custom mouse NCBIm38 library
+			($seg_name, $ref_assembly, $ref_chromosome, $ref_pos1, $ref_pos2, $ref_ori) = split(/:/, $seq_id, 6);
+		} elsif ($seq_id =~ m/NCBI/) {
+			# Standard Ensembl format (ie. without chromosomal position information)
+			$seq_id = (split(/:/, $seq_id, 2))[0];
+		} elsif ($seq_id =~ m/\|/) {
+			# IMGT format
+			$seg_name = (split(/\|/, $seq_id, 3))[1];
+		} else {
+			# currently parsing of other formats is not supported, just use complete $seq_id and issue a warning
+			$seg_name = $seq_id;
+			if ($print_log eq 1) {
+				$print_log = 0;
+				print LB "$log_prefix Fasta identifers in $fasta_file could not be parsed to extract segment name like for standard IMGT or Ensembl format. Using fasta identifier as segment name.\n";
+			}
+		}
+    
+		# if not defined in the next step, family, gene and allele should be empty
+		my $seg_family = "";
+		my $seg_gene = "";
+		my $seg_allele = "";
+
+		# split name in family, gene, allele (different from species to species)
+		# human nomenclature example: name = family(-{gene})*allele
+		if ($species eq "human") {
+			if ($seg_name =~ m/-/) {
+				($seg_family, my $rest) = split(/-/, $seg_name, 2);
+				($seg_gene, $seg_allele) = split(/\*/, $rest);
+			}
+			else {
+				($seg_family, $seg_allele) = split(/\*/, $seg_name, 2);
+			}
+		} elsif ($species eq "mouse") {
+			# Standard mouse Igh nomenclature is <family>.<segment number within family>.<segment number within locus>,
+			# numbering is performed proxminal to distal (relative to DJC location)
+			# ATTENTION: VGAM3.8 family uses "-" as separator instead of ".", and thus requires case distinction
+			# ATTENTION: Older mouse segment names only use one "."
+			# ATTENTION: Ancient mouse segment names are basically complete random strings and do neither contain family nor
+			#            positional information
+			#
+			if ($seg_name =~ m/^VGAM3\.8-/) {
+				($seg_family, $seg_gene) = (split(/-/, $seg_name, 3))[0,2]
+			}
+			elsif ($seg_name =~ m/\.\w+\./) {
+				($seg_family, $seg_gene) = (split(/\./, $seg_name, 3))[0,2]
+			}
+			elsif ($seg_name =~ m/\./) {
+				($seg_family, $seg_gene) = split(/\./, $seg_name, 2)
+			}
+			else { 
+				$seg_family = $seg_name; 
+				$seg_gene = $seg_name;
+			}
+		}
+
+		if ($parse_bool) {
+			$ins_seq_query->execute($species, $seg_name, $seg_family, $seg_gene, $seg_allele, $seq -> seq, $ref_assembly, $ref_chromosome, $ref_pos1, $ref_pos2, $ref_ori);
+		} else {
+			$ins_seq_query->execute($species, $seg_name, $seg_family, $seg_gene, $seg_allele, $seq -> seq);
+		}
+
+		# store all identifiers in the fasta file
+		push(@identifiers, $seq_id);
+		# initialize the hash
+		$ids_segtype_hash{$seq_id} = "";
 	}
-      $seg_name = $seq_id;
-    }
-    
-    # if not defined in the next step, family, gene and allele should be empty
-    my $seg_family = "";
-    my $seg_gene = "";
-    my $seg_allele = "";
-
-    # split name in family, gene, allele (different from species to species)
-    # human nomenclature example: name = family(-{gene})*allele
-    if ($species eq "human") {
-		if ($seg_name =~ m/-/) {
-			($seg_family, my $rest) = split(/-/, $seg_name, 2);
-			($seg_gene, $seg_allele) = split(/\*/, $rest);
-    	}
-    	else { ($seg_family, $seg_allele) = split(/\*/, $seg_name, 2); }
-    }
-	elsif ($species eq "mouse") {
-		# Standard mouse Igh nomenclature is <family>.<segment number within family>.<segment number within locus>,
-		# numbering is performed proxminal to distal (relative to DJC location)
-		# ATTENTION: VGAM3.8 family uses "-" as separator instead of ".", and thus requires case distinction
-		# ATTENTION: Older mouse segment names only use one "."
-		# ATTENTION: Ancient mouse segment names are basically complete random strings and do neither contain family nor
-		#            positional information
-		#
-		if ($seg_name =~ m/^VGAM3\.8-/) {
-			($seg_family, $seg_gene) = (split(/-/,$seg_name))[0,2]
-		}
-		elsif ($seg_name =~ m/\.\w+\./) {
-			($seg_family, $seg_gene) = (split(/\./,$seg_name))[0,2]
-		}
-		elsif ($seg_name =~ m/\./) {
-			($seg_family, $seg_gene) = split(/\./,$seg_name)
-		}
-		else { 
-			$seg_family = $seg_name; 
-			$seg_gene = $seg_name;
-		}
-	}
-
-    if ($parse_bool eq 1) {
-      $ins_seq_query->execute($species, $seg_name, $seg_family, $seg_gene, $seg_allele, $seq -> seq, $ref_assembly, $ref_chromosome, $ref_pos1, $ref_pos2, $ref_ori);
-    }
-    else {
-      $ins_seq_query->execute($species, $seg_name, $seg_family, $seg_gene, $seg_allele, $seq -> seq);
-    }
-    
-    # store all identifiers in the fasta file
-    push(@identifiers, $seq_id);
-    # initialize the hash
-    $ids_segtype_hash{$seq_id} = "";
-  }
-close $fasta_file;
+	close $fasta_file;
 }
 
 # 2. Insert Information from lookup file
