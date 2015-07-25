@@ -50,13 +50,21 @@ echo "[OK] Setting up database for human constant."
 mv -v human_gl_C.fasta ../${DIR_IGDATA_DB}/human_gl_C
 makeblastdb -dbtype nucl -in ../${DIR_IGDATA_DB}/human_gl_C
 mv -v ../${DIR_IGDATA_DB}/human_gl_C ../${DIR_IGDATA_DB}/human_gl_C.fasta
-./build_constant_db.pl -mysql_group mysql_igdb -lib ${LIBRARY} -sp human -fasta ../${DIR_IGDATA_DB}/human_gl_C.fasta
+./build_constant_db.pl \
+	-mysql_group mysql_igdb \
+	-lib ${LIBRARY} \
+	-sp human \
+	-fasta ../${DIR_IGDATA_DB}/human_gl_C.fasta
 
 echo "[OK] Setting up database for mouse constant."
 mv -v mouse_gl_C.fasta ../${DIR_IGDATA_DB}/mouse_gl_C
 makeblastdb -dbtype nucl -in ../${DIR_IGDATA_DB}/mouse_gl_C
 mv -v ../${DIR_IGDATA_DB}/mouse_gl_C ../${DIR_IGDATA_DB}/mouse_gl_C.fasta
-./build_constant_db.pl -mysql_group mysql_igdb -lib ${LIBRARY} -sp mouse -fasta ../${DIR_IGDATA_DB}/mouse_gl_C.fasta
+./build_constant_db.pl \
+	-mysql_group mysql_igdb \
+	-lib ${LIBRARY} \
+	-sp mouse \
+	-fasta ../${DIR_IGDATA_DB}/mouse_gl_C.fasta
 
 # process tags
 #

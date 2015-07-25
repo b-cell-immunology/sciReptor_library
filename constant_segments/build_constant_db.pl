@@ -76,11 +76,11 @@ my $dbh = DBI->connect($dsn,undef,undef,{PrintError=>1});
 #
 my $insert_seg_statement;
 if ($parse_bool) {
-	print LB "$log_prefix Switch \"--parse\" is set. Will attempt to parse chromosomal location information from FASTA headers.\n";
-	$insert_seg_statement = "INSERT IGNORE INTO $library_scheme.VDJ_library (species_id, name, locus, sequence, ref_assembly, ref_chromosome, ref_pos1, ref_pos2, ref_ori) values (?,?,?,?,?,?,?,?,?)";
+	print "$log_prefix Switch \"--parse\" is set. Will attempt to parse chromosomal location information from FASTA headers.\n";
+	$insert_seg_statement = "INSERT INTO $library_scheme.constant_library (species_id, name, locus, sequence, ref_assembly, ref_chromosome, ref_pos_centro, ref_pos_telo, ref_ori) values (?,?,?,?,?,?,?,?,?)";
 } else {
-	print LB "$log_prefix Switch \"--parse\" is NOT set. Chromosomal location information will be ignored.\n";
-	my $insert_seg_statement = "INSERT INTO $library_scheme.constant_library (species_id, name, locus, sequence) values (?,?,?,?)";
+	print "$log_prefix Switch \"--parse\" is NOT set. Chromosomal location information will be ignored.\n";
+	$insert_seg_statement = "INSERT INTO $library_scheme.constant_library (species_id, name, locus, sequence) values (?,?,?,?)";
 }
 my $ins_seq_query = $dbh->prepare($insert_seg_statement);
 
@@ -93,16 +93,18 @@ while (my $seq = $fasta_in->next_seq()) {
 	my $seq_id =  $seq->id;
 	print "$log_prefix Processing $seq_id\n";
 
+	my ($ref_assembly, $ref_chromosome, $ref_pos_centro, $ref_pos_telo, $ref_ori);
+
 	if ($parse_bool) {
 		# "extended" Ensembl format including chromosomal position information. Order of field is NAME:ASSEMBLY:CHROMOSOME:POS1:POS2:ORIENTATION
 		# This is used by the custom mouse NCBIm38 library
-		($seg_name, $ref_assembly, $ref_chromosome, $ref_pos1, $ref_pos2, $ref_ori) = split(/:/, $seq_id, 6);
+		($seq_id, $ref_assembly, $ref_chromosome, $ref_pos_centro, $ref_pos_telo, $ref_ori) = split(/:/, $seq_id, 6);
 	} elsif ($seq_id =~ m/NCBI/) {
 		# Standard Ensembl format (ie. without chromosomal position information)
 		$seq_id = (split(/:/, $seq_id, 2))[0];
 	} elsif ($seq_id =~ m/\|/) {
 		# IMGT format. ATTENTION: The IMGT listing contains the individual exons of a constant region, but only exon 1 will be inserted into the database
-		$seg_name, my $temp_exon = (split(/\|/, $seq_id, 6))[1,4];
+		($seq_id, my $temp_exon) = (split(/\|/, $seq_id, 6))[1,4];
 		if (($temp_exon ne "C-REGION") && ($temp_exon ne "CH1")) {
 			next;
 		}
@@ -124,9 +126,9 @@ while (my $seq = $fasta_in->next_seq()) {
 	}
 
 	if ($parse_bool) {
-		$ins_seq_query->execute($species, $seq_id, $locus, $seq -> seq, $ref_assembly, $ref_chromosome, $ref_pos1, $ref_pos2, $ref_ori);
+		$ins_seq_query->execute($species, $seq_id, $locus, uc($seq -> seq), $ref_assembly, $ref_chromosome, $ref_pos_centro, $ref_pos_telo, $ref_ori);
 	} else {
-		$ins_seq_query->execute($species, $seq_id, $locus, $seq -> seq);
+		$ins_seq_query->execute($species, $seq_id, $locus, uc($seq -> seq));
 	}
 }
 

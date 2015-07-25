@@ -26,9 +26,9 @@ mv -v data_mouse_ncbim38_2015-05-14/mouse_ncbim38*.n* ../${DIR_IGDATA_DB}
 echo "[OK] Setting up database for NCBI m38 mouse VDJ."
 ./build_VDJ_db.pl \
 	-mysql_group mysql_igdb \
-	-lu segments_ncbim38_mouse_2015-05-14.tsv \
+	-lu segments_mouse_ncbim38_2015-05-14.tsv \
 	-sp mouse \
-	-fa_dir data_ncbim38_mouse_2015-05-14 \
+	-fa_dir data_mouse_ncbim38_2015-05-14 \
 	-lib_scheme ${LIBRARY} \
 	-opt_file ../${DIR_IGDATA_DB}/../optional_file/mouse_ncbim38_gl.aux \
 	-log \
@@ -42,7 +42,12 @@ echo "[OK] Setting up database for mouse constant."
 cp -v mouse_ncbim38_gl_C.fasta ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C
 makeblastdb -dbtype nucl -in ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C
 mv -v ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C.fasta
-./build_constant_db.pl -mysql_group mysql_igdb -lib ${LIBRARY} -sp mouse -fasta ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C.fasta
+./build_constant_db.pl \
+	-mysql_group mysql_igdb \
+	-lib ${LIBRARY} \
+	-sp mouse \
+	-fasta ../${DIR_IGDATA_DB}/mouse_ncbim38_gl_C.fasta \
+	-parse
 
 # process tags
 #
