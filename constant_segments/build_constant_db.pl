@@ -72,12 +72,13 @@ my $dbh = DBI->connect($dsn,undef,undef,{PrintError=>1});
 # Insert Information from fasta file
 #
 # Switch "--parse" will activative parsing of additional information from FASTA header. These are the following fields:
-# reference assembly (e.g. NCBIm38), chromosome, centromeric boundary [bp], telomeric boundary [bp], orientation 
+# reference assembly (e.g. NCBIm38), chromosome, physical position lower boundary [bp] (inclusive),  physical position
+# upper boundary [bp] (inclusive), orientation
 #
 my $insert_seg_statement;
 if ($parse_bool) {
 	print "$log_prefix Switch \"--parse\" is set. Will attempt to parse chromosomal location information from FASTA headers.\n";
-	$insert_seg_statement = "INSERT INTO $library_scheme.constant_library (species_id, name, locus, sequence, ref_assembly, ref_chromosome, ref_pos_centro, ref_pos_telo, ref_ori) values (?,?,?,?,?,?,?,?,?)";
+	$insert_seg_statement = "INSERT INTO $library_scheme.constant_library (species_id, name, locus, sequence, ref_assembly, ref_chromosome, ref_pos_bound_low, ref_pos_bound_up, ref_ori) values (?,?,?,?,?,?,?,?,?)";
 } else {
 	print "$log_prefix Switch \"--parse\" is NOT set. Chromosomal location information will be ignored.\n";
 	$insert_seg_statement = "INSERT INTO $library_scheme.constant_library (species_id, name, locus, sequence) values (?,?,?,?)";
@@ -93,12 +94,12 @@ while (my $seq = $fasta_in->next_seq()) {
 	my $seq_id =  $seq->id;
 	print "$log_prefix Processing $seq_id\n";
 
-	my ($ref_assembly, $ref_chromosome, $ref_pos_centro, $ref_pos_telo, $ref_ori);
+	my ($ref_assembly, $ref_chromosome, $ref_pos_bound_low, $ref_pos_bound_up, $ref_ori);
 
 	if ($parse_bool) {
 		# "extended" Ensembl format including chromosomal position information. Order of field is NAME:ASSEMBLY:CHROMOSOME:POS1:POS2:ORIENTATION
 		# This is used by the custom mouse NCBIm38 library
-		($seq_id, $ref_assembly, $ref_chromosome, $ref_pos_centro, $ref_pos_telo, $ref_ori) = split(/:/, $seq_id, 6);
+		($seq_id, $ref_assembly, $ref_chromosome, $ref_pos_bound_low, $ref_pos_bound_up, $ref_ori) = split(/:/, $seq_id, 6);
 	} elsif ($seq_id =~ m/NCBI/) {
 		# Standard Ensembl format (ie. without chromosomal position information)
 		$seq_id = (split(/:/, $seq_id, 2))[0];
@@ -126,7 +127,7 @@ while (my $seq = $fasta_in->next_seq()) {
 	}
 
 	if ($parse_bool) {
-		$ins_seq_query->execute($species, $seq_id, $locus, uc($seq -> seq), $ref_assembly, $ref_chromosome, $ref_pos_centro, $ref_pos_telo, $ref_ori);
+		$ins_seq_query->execute($species, $seq_id, $locus, uc($seq -> seq), $ref_assembly, $ref_chromosome, $ref_pos_bound_low, $ref_pos_bound_up, $ref_ori);
 	} else {
 		$ins_seq_query->execute($species, $seq_id, $locus, uc($seq -> seq));
 	}

@@ -113,12 +113,13 @@ my %ids_segtype_hash;
 # Insert segment name, species, sequence. The combination of species and segment name has to be unique in the database.
 #
 # Switch "--parse" will activative parsing of additional information from FASTA header. These are the following fields:
-# reference assembly (e.g. NCBIm38), chromosome, centromeric boundary [bp], telomeric boundary [bp], orientation 
+# reference assembly (e.g. NCBIm38), chromosome, physical position lower boundary [bp] (inclusive), physical position
+# upper boundary [bp] (inclusive), orientation.
 #
 my $insert_seg_statement;
 if ($parse_bool) {
 	print LB "$log_prefix Switch \"--parse\" is set. Will attempt to parse chromosomal location information from FASTA headers.\n";
-	$insert_seg_statement = "INSERT IGNORE INTO $library_scheme.VDJ_library (species_id, seg_name, seg_family, seg_gene, seg_allele, seg_sequence, ref_assembly, ref_chromosome, ref_pos_centro, ref_pos_telo, ref_ori) values (?,?,?,?,?,?,?,?,?,?,?)";
+	$insert_seg_statement = "INSERT IGNORE INTO $library_scheme.VDJ_library (species_id, seg_name, seg_family, seg_gene, seg_allele, seg_sequence, ref_assembly, ref_chromosome, ref_pos_bound_low, ref_pos_bound_up, ref_ori) values (?,?,?,?,?,?,?,?,?,?,?)";
 } else {
 	print LB "$log_prefix Switch \"--parse\" is NOT set. Chromosomal location information will be ignored.\n";
 	$insert_seg_statement = "INSERT IGNORE INTO $library_scheme.VDJ_library (species_id, seg_name, seg_family, seg_gene, seg_allele, seg_sequence) values (?,?,?,?,?,?)";
@@ -136,13 +137,13 @@ for my $fasta_file (@segment_files) {
 	while (my $seq = $fasta_in->next_seq()) {
 		my $seq_id =  $seq->id;
 		my $seg_name = "";
-		my ($ref_assembly, $ref_chromosome, $ref_pos_centro, $ref_pos_telo, $ref_ori);
+		my ($ref_assembly, $ref_chromosome, $ref_pos_bound_low, $ref_pos_bound_up, $ref_ori);
     
 		# $seg_name is parsed differently according to information in fasta header. $parse_bool enforces extended Ensembl format if set
 		if ($parse_bool) {
 			# "extended" Ensembl format including chromosomal position information. Order of field is NAME:ASSEMBLY:CHROMOSOME:POS1:POS2:ORIENTATION
 			# This is used by the custom mouse NCBIm38 library
-			($seg_name, $ref_assembly, $ref_chromosome, $ref_pos_centro, $ref_pos_telo, $ref_ori) = split(/:/, $seq_id, 6);
+			($seg_name, $ref_assembly, $ref_chromosome, $ref_pos_bound_low, $ref_pos_bound_up, $ref_ori) = split(/:/, $seq_id, 6);
 		} elsif ($seq_id =~ m/NCBI/) {
 			# Standard Ensembl format (ie. without chromosomal position information)
 			$seg_name = (split(/:/, $seq_id, 2))[0];
@@ -197,7 +198,7 @@ for my $fasta_file (@segment_files) {
 		}
 
 		if ($parse_bool) {
-			$ins_seq_query->execute($species, $seg_name, $seg_family, $seg_gene, $seg_allele, uc($seq -> seq), $ref_assembly, $ref_chromosome, $ref_pos_centro, $ref_pos_telo, $ref_ori);
+			$ins_seq_query->execute($species, $seg_name, $seg_family, $seg_gene, $seg_allele, uc($seq -> seq), $ref_assembly, $ref_chromosome, $ref_pos_bound_low, $ref_pos_bound_up, $ref_ori);
 		} else {
 			$ins_seq_query->execute($species, $seg_name, $seg_family, $seg_gene, $seg_allele, uc($seq -> seq));
 		}
