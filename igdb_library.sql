@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS `tags_library` (
   PRIMARY KEY (`tag_id`),
   UNIQUE INDEX `tag_id_UNIQUE` (`tag_id` ASC),
   UNIQUE INDEX `unique_id` (`name` ASC, `matrix` ASC, `batch` ASC))
-ENGINE = InnoDB;
+ENGINE = MyISAM;
 
 SHOW WARNINGS;
 
