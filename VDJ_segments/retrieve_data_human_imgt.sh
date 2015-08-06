@@ -53,7 +53,7 @@ do
 			continue
 		fi;
 		BASE_TEMP_FILE="${OUT_DIR}/${SPECIES}_gl_${LOCUS}${SEGTYPE}"
-		tail -n +$(( $(grep -n "<b>Number of results =" ${BASE_TEMP_FILE}.html | sed "s/:.*//") + 1 )) ${BASE_TEMP_FILE}.html > ${BASE_TEMP_FILE}_2.html;
+		tail -n +$(( $(grep -n "<b>Number of results =" ${BASE_TEMP_FILE}.html | sed "s/:.*//") + 1 )) ${BASE_TEMP_FILE}.html | sed "s/\x0D$//g" > ${BASE_TEMP_FILE}_2.html;
 		head -n $(( $( grep -n -i -m 1 "^<hr\(\ \/\)\?>$" ${BASE_TEMP_FILE}_2.html | sed "s/:.*//" ) - 2 )) ${BASE_TEMP_FILE}_2.html > ${BASE_TEMP_FILE}_3.html;
 		cat  ${BASE_TEMP_FILE}_3.html | tr "\12" "\00" | sed "s/.*<pre>\x00\([^<]\+\)\x00<\/pre>.*/\1/" | tr "\00" "\12" > ${BASE_TEMP_FILE}.fasta
  		grep -H "^>" ${BASE_TEMP_FILE}.fasta | sed "s/^${OUT_DIR}\/${SPECIES}_gl_\([HKL]\)\([VDJ]\)\.fasta:>[[:alnum:]_.]\+|\([^|]\+\)|.*/\3\t\2\1/" >> $OUT_FILE_SEGINFO
