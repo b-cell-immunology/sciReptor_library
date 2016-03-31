@@ -1,109 +1,61 @@
 #!/usr/bin/perl
-
+#
 # Process data from various tag files for subsequent insertion into the database
 #
 # USE FOLLOWING COMMAND TO UPLOAD TO DATABASE
 # note: use from command line with --local-infile=1 option, otherwise the load data local... is blocked
 # load data local infile 'tag_library.csv' into table tags_library";
-
-use DBI;
+#
+use strict;
 use warnings;
+use File::Find;
 
-# tag batch:
-# species_isotypes_number
+my $option_directory = ".";
+my $re_filename_tags = qr /.*tags_[0-9.ki]+_([0-9]{2,3})x([0-9]{2,3})_matrix\.tsv$/;
 
-my $batch48_g = 'Hs_G_001';
-my $batch48_aegm = 'Hs_AEGM_001';
-my $batch48_agm = 'Mm_AGM_001';
-my $batch48_adgm = 'Mm_ADGM_001';
-my $batch256_agm = 'Mm_AGM_002';
+my %hash_matrix_batch;
 
-# open input and output files
-open(CSV48, '<matrix48_48_tags.csv') or die "infile for 48_48 matrix not found";
-open(COL240, '<matrix240_256_col5prime.txt') or die "infile for 240_256 cols not found";
-open(ROW240, '<matrix240_256_row3prime.txt') or die "infile for 240_256 rows not found";
-open(DBCSV, '>tag_library.csv') or die "outfile missing";
-
-# get sequences from the 48_48 matrix
-my $matrix = "48_48";
-
-while(<CSV48>) {
+open my $fh_batches, "<", "matrix_batches.tsv" or die "Could not open matrix_batches.tsv";
+foreach (<$fh_batches>) {
 	chomp $_;
-	unless ($_ =~ m/row/) {
-		($id, $col_tag, $row_tag) = split("\t", $_);
-		# 0 padded
-		$id = sprintf("%03d", $id);
-		# Hs_G_001
-		print DBCSV "\tR$id\t$row_tag\t$matrix\t$batch48_g\n";
-		print DBCSV "\tC$id\t$col_tag\t$matrix\t$batch48_g\n";
-		# Hs_AEGM_001
-		print DBCSV "\tR$id\t$row_tag\t$matrix\t$batch48_aegm\n";
-		print DBCSV "\tC$id\t$col_tag\t$matrix\t$batch48_aegm\n";
-		# Mm_AGM_001
-		print DBCSV "\tR$id\t$row_tag\t$matrix\t$batch48_agm\n";
-		print DBCSV "\tC$id\t$col_tag\t$matrix\t$batch48_agm\n";
-		# Mm_ADGM_001
-		print DBCSV "\tR$id\t$row_tag\t$matrix\t$batch48_adgm\n";
-		print DBCSV "\tC$id\t$col_tag\t$matrix\t$batch48_adgm\n";
-	}
+	(my $matrix, my $batch) = split /\t/, $_;
+	push @{$hash_matrix_batch{$matrix}}, $batch;
+}
+close $fh_batches;
+
+open my $fh_output, ">", "tag_library.csv" or die "Could not open tag_library.csv";
+
+my @list_files_tags = ();
+{
+    sub sub_find_regex_files {
+        m/$re_filename_tags/ &&
+        -f $_ &&
+        push @list_files_tags, $File::Find::name;
+    }
+    find(\&sub_find_regex_files,("$option_directory"))
 }
 
+foreach my $filename_current ( sort @list_files_tags ) {
 
-# get sequences from the 240_256 matrix
-$matrix = "240_256";
-my $count = 0;
+	my $matrix = $filename_current;
+	$matrix =~ s/$re_filename_tags/$1_$2/;
+	open my $fh_current, "<", $filename_current;
+	while (<$fh_current>) {
+		chomp $_;
+		next if ($_ =~ m/number/);  # skip header line
 
-while(<COL240>) {
-	chomp $_;
-	$count++;
-	# 0 padded
-	$count = sprintf("%03d", $count);
-	# Mm_AGM_001
-	print DBCSV "\tC$count\t$_\t$matrix\t$batch256_agm\n";
-}
+		(my $id, my $col_tag, my $row_tag) = split /\t/, $_;
 
-$count = 0;
-while(<ROW240>) {
-	chomp $_;
-	$count++;
-	# 0 padded
-	$count = sprintf("%03d", $count);
-	# Mm_AGM_001
-	print DBCSV "\tR$count\t$_\t$matrix\t$batch256_agm\n";
-}
-
-
-# added for L matrix 08/2015 KI
-my $batch72_64_aegm = 'Hs_AEGM_002';
-open(CSV72_64, 'tag_table_4.5ki_72x64_matrix.csv') or die "infile for 72_64 matrix not found"; 
-my $id_padded;
-$matrix = "72_64";
-
-while(<CSV72_64>) {
-	chomp $_;
-	unless ($_ =~ m/Number/) { # skip first line
-		# parsing is different for line 64-72,  (no rows)
-		if ($id <64) {
-		  ($id, $col_tag, $row_tag) = split("\t", $_);
-		  # 0 padded
-		  $id_padded = sprintf("%03d", $id);
-		  # Hs_G_001
-		  print DBCSV "\tR$id_padded\t$row_tag\t$matrix\t$batch72_64_aegm\n";
-		  print DBCSV "\tC$id_padded\t$col_tag\t$matrix\t$batch72_64_aegm\n";
+		foreach my $batch ( @{$hash_matrix_batch{$matrix}} ) {
+			if ($row_tag) {
+				printf $fh_output "\tR%03d\t%s\t%s\t%s\n", $id, $row_tag, $matrix, $batch;
+			}
+			if ($col_tag) {
+				printf $fh_output "\tC%03d\t%s\t%s\t%s\n", $id, $col_tag, $matrix, $batch;
+			}
 		}
-		else {
-		  ($id, $col_tag) = split("\t", $_);
-		  # 0 padded
-		  $id_padded = sprintf("%03d", $id);
-		  # Hs_G_001
-		  print DBCSV "\tC$id_padded\t$col_tag\t$matrix\t$batch72_64_aegm\n";
-		}
-
 	}
+	close $fh_current;
 }
 
-close(CSV72_64);
-close(CSV48);
-close(COL240);
-close(ROW240);
-close(DBCSV);
+close $fh_output;
