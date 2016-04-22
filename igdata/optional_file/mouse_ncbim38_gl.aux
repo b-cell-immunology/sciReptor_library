@@ -1,16 +1,22 @@
-# J segment RF offset file for NCBIm38 derived database
+# J segment reading-frame offset file for mouse NCBIm38 database
+#
+# Format: <segment>\t<frame>\t<type>
+#   <segment>: Segment name, has to be identical to IgBLAST database, case-sensitive
+#   <frame>  : offset (0-based) of first complete codon
+#   <type>   : locus, functionality unknown
+#
 
-JH1	1	JH
-JH2	2	JH
-JH3	2	JH
-JH4	2	JH
-JK1	1	JK
-JK2	2	JK
-JK3	1	JK
-JK4	1	JK
-JK5	1	JK
-JL1	1	JL
-JL3p	-1	JL
-JL3	1	JL
-JL4	1	JL
-JL2	1	JL
+JH1:NCBIm38:12:113429781:113429833:-1	1	JH
+JH2:NCBIm38:12:113429468:113429515:-1	2	JH
+JH3:NCBIm38:12:113429085:113429132:-1	2	JH
+JH4:NCBIm38:12:113428514:113428567:-1	2	JH
+JK1:NCBIm38:6:70722562:70722599:1	1	JK
+JK2:NCBIm38:6:70722916:70722954:1	2	JK
+JK3:NCBIm38:6:70723223:70723260:1	1	JK
+JK4:NCBIm38:6:70723548:70723585:1	1	JK
+JK5:NCBIm38:6:70723886:70723923:1	1	JK
+JL1:NCBIm38:16:19063225:19063262:-1	1	JL
+JL3p:NCBIm38:16:19066371:19066407:-1	-1	JL
+JL3:NCBIm38:16:19067041:19067078:-1	1	JL
+JL4:NCBIm38:16:19196499:19196536:-1	1	JL
+JL2:NCBIm38:16:19200198:19200235:-1	1	JL

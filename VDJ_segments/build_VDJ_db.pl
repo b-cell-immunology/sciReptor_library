@@ -283,18 +283,20 @@ if (@minus_int) {print LB "$log_prefix The following segments are V segments. Th
 
 my @opt_identifiers;
 
-open(OPTIONAL, $optional_file) or die "$error_prefix could not open $optional_file\n";
+open(my $fh_optional, $optional_file) or die "$error_prefix could not open $optional_file\n";
 
-while(<OPTIONAL>) {
-  chomp $_;
-  my @line = split(/\h+/, $_);
+while (<$fh_optional>) {
+	chomp $_;
+	next if (/^\s*#/);
+	my @line = split(/\s+/, $_);
   
-  if (scalar @line == 3) {
-  	my $opt_seg_name = $line[0];
-  	my $frame = $line[1];
-  	$dbh->do("UPDATE $library_scheme.VDJ_library SET seg_frame = $frame WHERE species_id='$species' AND seg_name='$opt_seg_name'");
-  	push(@opt_identifiers, $opt_seg_name);
-  }
+	if (scalar @line == 3) {
+		my $opt_seg_name = $line[0];
+		$opt_seg_name =~ s/:.*// if $parse_bool;
+		my $frame = $line[1];
+		$dbh->do("UPDATE $library_scheme.VDJ_library SET seg_frame = $frame WHERE species_id='$species' AND seg_name='$opt_seg_name'");
+		push(@opt_identifiers, $opt_seg_name);
+	}
 }
 
 # check for database sequences not in internal file
