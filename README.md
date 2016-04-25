@@ -17,7 +17,9 @@ will install the most recent version.
 
 Library 3 is a complete reference library for the C57BL/6 strain. It is based
 on the NCBI mouse genome assemblies 37 and 38 and has been extensively 
-cross-checked for accurate segment boundaries.
+cross-checked for accurate segment boundaries. It is provided as positional
+reference to the NCBIm38 assembly, the actual sequence data will be downloaded
+during the installation process.
 
 
 ###Installation
@@ -27,14 +29,14 @@ Please follow the steps described in the [sciReptor installation guide](https://
 ###Related repositories
 
 - [sciReptor](https://github.com/b-cell-immunology/sciReptor) is the parental
-  repository, which contains the code for the acutal data processing pipeline.
+  repository, which contains the code for the actual data processing pipeline.
 
 
 ###Copyright and License
 
 #####Code
 
-Copyright (2013-2015) Katharina Imkeller and Christian Busse.
+Copyright (2013-2016) Katharina Imkeller and Christian Busse.
 
 sciReptor is free software: you can redistribute it and/or modify it under
 the terms of the [GNU Affero General Public License][] as published by the
@@ -53,7 +55,7 @@ along with sciReptor. If not, see <http://www.gnu.org/licenses/>.
 
 #####Mouse C57BL/6 database
 
-Created and maintained (2009-2015) by Christian Busse, covered by 
+Created and maintained (2009-2016) by Christian Busse, covered by
 EU Directive 96/9/EC on the legal protection of databases.
 
 This database is made available under the [Open Database License][]. Any
